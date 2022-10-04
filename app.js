@@ -13,6 +13,9 @@ let editID = "";
 // ****** EVENT LISTENERS **********
 // submit form
 form.addEventListener("submit", addItem);
+// clear items
+clearBtn.addEventListener('click', clearItems);
+// load items
 
 // ****** FUNCTIONS **********
 function addItem (e){
@@ -36,6 +39,10 @@ function addItem (e){
               <i class="fa fa-trash"></i>
             </button>
           </div>`;
+     const deleteBtn = element.querySelector(".delete-btn");
+     const editBtn = element.querySelector(".edit-btn");
+     deleteBtn.addEventListener('click', deleteItem);
+     editBtn.addEventListener('click', editItem);
           // append child listItems
           list.appendChild(element);
           // display alert
@@ -47,7 +54,11 @@ function addItem (e){
           // set back to default
           setBackToDefault();
      }else if(value !== '' && editFlag === true){
-          console.log('editing');
+          editElement.innerHTML = value;
+          displayAlert('value added', 'success');
+          // edit local storage
+          editLocalStorage(editID, value);
+          setBackToDefault();
      }else{
           displayAlert("please enter a value", "danger")
      }
@@ -62,6 +73,44 @@ function displayAlert(text, action) {
        alert.classList.remove(`alert-${action}`);
      }, 1000);
    }
+// clear Items
+function clearItems(){
+   const items = document.querySelectorAll(".grocery-item");
+   if(items.lenght > 0){
+     items.forEach(function(item){
+          list.removeChild(item);
+     });
+   }
+   container.classList.remove("show-container");
+   displayAlert("empty list", "danger");
+   setBackToDefault();
+   localStorage.removeItem('list');
+}
+// edit function
+function editItem(e){
+     const element = e.currentTarget.parentElement.parentElement;
+     // set edit item
+     editElement = e.currentTarget.parentElement.previousElementSibling;
+     // set form value
+     grocery.value = editElement.innerHTML;
+     editFlag = true;
+     editID = element.dataset.id;
+     submitBtn.textContent = "edit";
+}
+// delete function
+function deleteItem(e){
+     const element = e.currentTarget.parentElement.parentElement;
+     const id = element.dataset.id;
+     list.removeChild(element);
+     if(list.children.length === 0){
+          container.classList.remove("show-container");
+     }
+     displayAlert('item removed', 'danger');
+     setBackToDefault();
+     // remove from local storage
+     removeFromLocalStorage(id);
+}
+
 // set back to default
 function setBackToDefault () {
      grocery.value = "";
@@ -69,8 +118,43 @@ function setBackToDefault () {
      editID = "";
      submitBtn.textContent = "submit";
 }
+
 // ****** LOCAL STORAGE **********
 function addToLocalStorage(id, value){
-     console.log("added to local storage");
+    const grocery = {id, value};
+    let items = getLocalStorage();
+    localStorage.setItem('list',JSON.stringify(items));
 }
+function removeFromLocalStorage(id){
+     let items = getLocalStorage();
+     items = items.filter(function(item){
+          if(item.id !== id){
+               return item;
+          }
+     });
+     localStorage.setItem('list',JSON.stringify(items));
+}
+function editLocalStorage(id, value){
+     let items = getLocalStorage();
+     items = items.map(function(item){
+          if(item.id === id){
+               item.value = value;
+          }
+          return item;
+     });
+     localStorage.setItem('list',JSON.stringify(items));
+}
+function getLocalStorage(){
+     return localStorage.getItem("list")? JSON.parse(localStorage.getItem("list")): [];
+}
+// localStorage API
+// setItem
+// getItem
+// removeItem
+// save as string
+// localStorage.setItem('orange', JSON.stringify(['item','item2']));
+// const oranges = JSON.parse(localStorage.getItem('orange'));
+// localStorage.removeItem("orange");
+
 // ****** SETUP ITEMS **********
+
